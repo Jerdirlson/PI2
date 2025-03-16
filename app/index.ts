@@ -1,9 +1,8 @@
+import cors from 'cors';
 import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
-import config from './config/config';
 
-// Importar rutas
+import config from './config/config';
 import authRoutes from './routes/auth.routes';
 
 // Inicializar la aplicación Express

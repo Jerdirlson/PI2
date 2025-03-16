@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import User, { IUser } from '../models/User';
+
 import config from '../config/config';
+import User, { IUser } from '../models/User';
 
 /**
  * Registrar un nuevo usuario
@@ -61,7 +62,6 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // Verificar que se proporcionaron email y contraseña
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -69,10 +69,8 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Buscar usuario por email
     const user = await User.findOne({ email }).select('+password');
     
-    // Verificar si el usuario existe
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -80,7 +78,6 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Verificar contraseña
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -89,10 +86,8 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Generar token
     const token = generateToken(user._id.toString());
 
-    // Responder con el usuario y token
     res.status(200).json({
       success: true,
       data: {
