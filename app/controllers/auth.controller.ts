@@ -17,7 +17,7 @@ interface UserResponse {
  * @route POST /api/auth/register
  * @access Public
  */
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('=== Iniciando registro de usuario ===');
     const { name, email, password } = req.body;
@@ -25,10 +25,11 @@ export const register = async (req: Request, res: Response) => {
     // Validar campos requeridos
     if (!name || !email || !password) {
       console.log('Error de validación: Campos requeridos faltantes');
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Todos los campos son requeridos (nombre, email, contraseña)',
       });
+      return;
     }
 
     console.log(`Datos recibidos: nombre=${name}, email=${email}, password=****`);
@@ -39,10 +40,11 @@ export const register = async (req: Request, res: Response) => {
     
     if (userExists) {
       console.log(`Usuario con email ${email} ya existe`);
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Este email ya está registrado',
       });
+      return;
     }
 
     // Crear nuevo usuario
@@ -54,7 +56,7 @@ export const register = async (req: Request, res: Response) => {
     });
 
     // Asegurar que _id esté definido
-    const userId = user._id;
+    const userId = user._id as mongoose.Types.ObjectId;
     console.log(`Usuario creado con ID: ${userId}`);
 
     // Generar token
@@ -92,17 +94,18 @@ export const register = async (req: Request, res: Response) => {
  * @route POST /api/auth/login
  * @access Public
  */
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('=== Iniciando proceso de login ===');
     const { email, password } = req.body;
 
     if (!email || !password) {
       console.log('Error de validación: Email o contraseña no proporcionados');
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Por favor proporciona email y contraseña',
       });
+      return;
     }
 
     console.log(`Intentando login con email: ${email}`);
@@ -110,10 +113,11 @@ export const login = async (req: Request, res: Response) => {
     
     if (!user) {
       console.log(`Usuario con email ${email} no encontrado`);
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Credenciales inválidas',
       });
+      return;
     }
 
     console.log('Verificando contraseña...');
@@ -121,14 +125,15 @@ export const login = async (req: Request, res: Response) => {
     
     if (!isMatch) {
       console.log('Contraseña incorrecta');
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Credenciales inválidas',
       });
+      return;
     }
 
     console.log('Login exitoso, generando token...');
-    const userId = user._id;
+    const userId = user._id as mongoose.Types.ObjectId;
     const token = generateToken(userId.toString());
 
     console.log(`Usuario ${user.name} (${user.email}) autenticado correctamente`);
@@ -162,15 +167,16 @@ export const login = async (req: Request, res: Response) => {
  * @route GET /api/auth/me
  * @access Private
  */
-export const getMe = async (req: Request, res: Response) => {
+export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('=== Obteniendo datos de usuario ===');
     
     if (!req.user || !req.user.id) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'No autorizado',
       });
+      return;
     }
     
     console.log(`ID de usuario: ${req.user.id}`);
@@ -178,16 +184,17 @@ export const getMe = async (req: Request, res: Response) => {
 
     if (!user) {
       console.log(`Usuario con ID ${req.user.id} no encontrado`);
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'Usuario no encontrado',
       });
+      return;
     }
 
     console.log(`Datos de usuario ${user.name} obtenidos correctamente`);
     
     const userResponse: UserResponse = {
-      id: user._id,
+      id: user._id as mongoose.Types.ObjectId,
       name: user.name,
       email: user.email
     };
@@ -218,8 +225,8 @@ const generateToken = (id: string): string => {
     throw new Error('JWT_SECRET no está definido');
   }
   
-  // Usar as jwt.Secret para forzar el tipo
-  return jwt.sign({ id }, secretKey as jwt.Secret, {
+  // @ts-ignore: El tipo de jwt es correcto pero TypeScript no lo reconoce
+  return jwt.sign({ id }, secretKey, {
     expiresIn: config.JWT_EXPIRES_IN,
   });
 }; 
