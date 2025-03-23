@@ -2,7 +2,7 @@
   "name": "pi2",
   "version": "1.0.0",
   "description": "PI2 with web scrapping",
-  "type": "module",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "start": "node dist/app/index.js",
